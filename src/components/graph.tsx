@@ -5,9 +5,9 @@ import HighchartsReact from "highcharts-react-official";
 
 
 
-export const Graph = (props) => {
+export const Graph = (props :Highcharts.Options | undefined) => {
 
-
+console.log(props)
 const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   return <>
       <HighchartsReact

@@ -6,25 +6,34 @@ import { Graph } from "./components/graph"
 
 export const App: FC = (props: HighchartsReact.Props) => {
   const [ApiKey, setApiKey] = React.useState<string | null>("XKTYU01YdTFuFKoRNLlev4Wk6GJAqFgPiv8QaiIM");
+  const [HeadersState, setHeadersState] = React.useState<HeadersInit | undefined>(undefined);
   const [SelectNumbers, setSelectNumbers] = React.useState<number[]>([]);
   const [TodoufukenData, setTodoufukenData] = React.useState<TodoufukenData[]>([]);
-  const [GraphData, setGraphData] = React.useState<Highcharts.Options>();
+  const [GraphData, setGraphData] = React.useState<Highcharts.Options>({});
 
   interface TodoufukenData {
-    prefCode: number;
-    prefName: string;
+    prefCode: string;
+    prefName: number;
+  }
+  interface ValuesData {
+    year: string;
+    value: number;
   }
 
   //const ApiKey = "XKTYU01YdTFuFKoRNLlev4Wk6GJAqFgPiv8QaiIM";
   // 各都道府県の名前とidを取得
   useEffect(() => {
-    let apiKeyPrompt: string | null = null;
-    if (ApiKey === null) {
-      apiKeyPrompt = window.prompt("apiKeyを入力してください", "");
-      setApiKey(apiKeyPrompt);
+    let apiKeyPrompt = HeadersState;
+    if (apiKeyPrompt === undefined) {
+      const prompt = window.prompt("apiKeyを入力してください", "");
+      const headers = new Headers({
+        "X-API-KEY": ` ${prompt}`
+      });
+      apiKeyPrompt = headers && new Headers(headers);
     }
+    setHeadersState(apiKeyPrompt)
     fetch(`https://opendata.resas-portal.go.jp/api/v1/prefectures`, {
-      headers: { "X-API-KEY": apiKeyPrompt },
+      headers: apiKeyPrompt
     })
       .then((response) => response.json())
       .then((data) => setTodoufukenData(data.result))
@@ -36,11 +45,12 @@ export const App: FC = (props: HighchartsReact.Props) => {
 
     fetch(
       `https://opendata.resas-portal.go.jp/api/v1/population/composition/perYear?prefCode=0`,
-      { headers: { "X-API-KEY": apiKeyPrompt } }
+      { headers: apiKeyPrompt }
     )
       .then((response) => response.json())
       .then((data) => {
-        const dates = data.result.data[0]["data"];
+        const dates :ValuesData[] = data.result.data[0]["data"];
+        console.log(dates)
         let arr: string[] = [];
         dates.forEach((e) => {
           arr = [...arr, e["year"]];
@@ -68,6 +78,8 @@ export const App: FC = (props: HighchartsReact.Props) => {
   }, []);
 
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
+
+
   const getData = (prefCode: number, ApiKey: string | null) => {
     setSelectNumbers([...SelectNumbers, prefCode]);
 
@@ -78,13 +90,14 @@ export const App: FC = (props: HighchartsReact.Props) => {
       )
         .then((response) => response.json())
         .then((data) => {
-          const dates = data.result.data[0]["data"];
+          const dates :ValuesData[]= data.result.data[0]["data"];
           let arr: number[] = [];
           dates.forEach((e) => {
             arr = [...arr, e["value"]];
           });
-          let series = GraphData.series;
-          const name = TodoufukenData[prefCode - 1]["prefName"];
+          if (GraphData.series !== undefined) {
+          let series: Highcharts.SeriesOptionsType[] = GraphData.series;
+          const name = String(TodoufukenData[prefCode - 1]["prefName"]);
           const frame: Highcharts.SeriesOptionsType = {
             type: "line",
             name: name,
@@ -93,6 +106,7 @@ export const App: FC = (props: HighchartsReact.Props) => {
           series = [...series, frame];
           const graphDataBefore: Highcharts.Options = { series: series };
           setGraphData(graphDataBefore);
+          }
         })
         .catch((error) =>
           alert(
@@ -108,9 +122,11 @@ export const App: FC = (props: HighchartsReact.Props) => {
   const deleteData = (prefCode: number) => {
     const search = SelectNumbers.indexOf(prefCode);
     let series = GraphData.series;
-    series.splice(search, 1);
-    const graphDataBefore: Highcharts.Options = { series: series };
-    setGraphData(graphDataBefore);
+    if (series !== undefined) {
+      series.splice(search, 1);
+      const graphDataBefore: Highcharts.Options = { series: series };
+      setGraphData(graphDataBefore);
+    }
   };
   const judge = (prefCode: string, ApiKey: string | null) => {
     let e = document.getElementById(prefCode) as HTMLInputElement;
@@ -123,6 +139,12 @@ export const App: FC = (props: HighchartsReact.Props) => {
       deleteData(num);
     }
   };
+  let dataOptions: Highcharts.DataOptions = {}
+  useEffect(() => {  
+  const options: Highcharts.Options = GraphData;
+  dataOptions = options as Highcharts.DataOptions;
+  console.log(dataOptions)
+  }, [GraphData]);
 
   const p: CSSProperties = {
     display: "inline-block",
@@ -142,15 +164,17 @@ export const App: FC = (props: HighchartsReact.Props) => {
   return (
     <>
       <Title />
-      {TodoufukenData.map((data, index) => {
+      {TodoufukenData.length === 0 && <h1>エラーが発生しました</h1>}
+      {
+      TodoufukenData.map((data, index) => {
         /**
          * @type {string} 都道府県の名前
          */
-        const prefName: string = data["prefName"];
+        const prefName = data["prefName"];
         /**
          * @type {number} 都道府県の呼出番号
          */
-        const prefCode: number = data["prefCode"];
+        const prefCode = data["prefCode"];
         /**
          * @type {string} 都道府県の呼出番号のString型
          */
@@ -167,14 +191,16 @@ export const App: FC = (props: HighchartsReact.Props) => {
             <p style={p}>{prefName}</p>
           </div>
         );
-      })}
+      })
+      }
+    
       <HighchartsReact
         highcharts={Highcharts}
         options={GraphData}
         ref={chartComponentRef}
         {...props}
       />
-      <Graph data={GraphData}></Graph>
+      <Graph data={dataOptions}></Graph>
     </>
   );
 };
