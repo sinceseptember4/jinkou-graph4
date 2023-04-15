@@ -1,15 +1,16 @@
+
 import React, { useEffect, useRef, FC, CSSProperties } from 'react';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { Title } from './components/title';
 import { Graph } from './components/graph';
+import { ApiUrl,ApiUrlPrefectures } from './Url';
 
 export const App: FC = (props: HighchartsReact.Props) => {
   const [HeadersState, setHeadersState] = React.useState<HeadersInit | undefined>(undefined);
   const [SelectNumbers, setSelectNumbers] = React.useState<number[]>([]);
   const [TodoufukenData, setTodoufukenData] = React.useState<TodoufukenData[]>([]);
   const [GraphData, setGraphData] = React.useState<Highcharts.Options>({});
-  const ApiUrl = 'https://opendata.resas-portal.go.jp';
   interface TodoufukenData {
     prefCode: string;
     prefName: number;
@@ -36,48 +37,49 @@ export const App: FC = (props: HighchartsReact.Props) => {
       });
       apiKeyPrompt = headers && new Headers(headers);
     }
-    setHeadersState(apiKeyPrompt);
-    fetch(`${ApiUrl}/api/v1/prefectures`, {
-      headers: apiKeyPrompt,
-    })
-      .then((response) => response.json())
-      .then((data) => setTodoufukenData(data.result))
-      .catch((error) =>
-        alert('エラーが発生しました。APIKEYが間違っている可能性があります。' + error)
-      );
-
-    fetch(`${ApiUrl}/api/v1/population/composition/perYear?prefCode=0`, {
-      headers: apiKeyPrompt,
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        /**
-         * @type {{ year: string, value: number }} year: 西暦。グラフに挿入する都合上、文字列　value: その年の人口数
-         */
-        const dates: ValuesData[] = data.result.data[0]['data'];
-        let arr: string[] = [];
-        dates.forEach((e) => {
-          arr = [...arr, e['year']];
-        });
-        //ここで初期データを挿入
-        setGraphData({
-          title: {
-            text: '',
-          },
-          xAxis: {
-            categories: arr,
-          },
-          yAxis: {
-            title: {
-              text: '人口',
-            },
-          },
-          series: [],
-        });
+      setHeadersState(apiKeyPrompt);
+      fetch(ApiUrlPrefectures, {
+        headers: apiKeyPrompt,
       })
-      .catch((error) =>
-        alert('エラーが発生しました。APIKEYが間違っている可能性があります。' + error)
-      );
+        .then((response) => response.json())
+        .then((data) => setTodoufukenData(data.result))
+        .catch((error) =>
+          alert('エラーが発生しました。APIKEYが間違っている可能性があります。' + error)
+        );
+
+      fetch(`${ApiUrl}/api/v1/population/composition/perYear?prefCode=0`, {
+        headers: apiKeyPrompt,
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          /**
+           * @type {{ year: string, value: number }} year: 西暦。グラフに挿入する都合上、文字列　value: その年の人口数
+           */
+          const dates: ValuesData[] = data.result.data[0]['data'];
+          let arr: string[] = [];
+          dates.forEach((e) => {
+            arr = [...arr, e['year']];
+          });
+          //ここで初期データを挿入
+          setGraphData({
+            title: {
+              text: '',
+            },
+            xAxis: {
+              categories: arr,
+            },
+            yAxis: {
+              title: {
+                text: '人口',
+              },
+            },
+            series: [],
+          });
+        })
+        .catch((error) =>
+          alert('エラーが発生しました。APIKEYが間違っている可能性があります。' + error)
+        );
+    
   }, []);
 
   const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
