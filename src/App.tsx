@@ -224,13 +224,8 @@ export const App: FC = (props: HighchartsReact.Props) => {
         <p>No data available</p>
       )}
 
-      <HighchartsReact
-        highcharts={Highcharts}
-        options={GraphData}
-        ref={chartComponentRef}
-        {...props}
-      />
-      <Graph data={dataOptions}></Graph>
+
+      <Graph data={GraphData}></Graph>
     </>
   );
 };

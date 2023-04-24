@@ -1,10 +1,10 @@
 import axios from 'axios';
-import {ApiUrlPrefectures } from './Url';
+import { ApiUrlPrefectures } from './Url';
 const PreTest = (ApiUrlPrefectures: string): Promise<string> => {
   return axios
     .get(ApiUrlPrefectures)
     .then((response) => {
-        const statusCode :string= response.data["statusCode"]
+      const statusCode: string = response.data['statusCode'];
       return statusCode;
     })
     .catch((error) => {
@@ -12,8 +12,12 @@ const PreTest = (ApiUrlPrefectures: string): Promise<string> => {
     });
 };
 
+
 test('API data test', () => {
-    return PreTest(ApiUrlPrefectures).then((data) => {
-      expect(data).toBe('403');
-    });
+  return PreTest(ApiUrlPrefectures).then((data) => {
+    expect(data).toBe('403');
   });
+});
+
+
+
