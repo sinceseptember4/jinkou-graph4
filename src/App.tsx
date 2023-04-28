@@ -32,10 +32,13 @@ export const App: FC = (props: HighchartsReact.Props) => {
       /**
        * @type {HeadersInit} {"X-API-KEY": API keyが挿入});
        */
-      const headers = new Headers({
-        'X-API-KEY': ` ${prompt}`,
-      });
-      apiKeyPrompt = headers && new Headers(headers);
+      if (prompt) {
+        prompt.trim();
+        const headers = new Headers({
+          'X-API-KEY': ` ${prompt}`,
+        });
+        apiKeyPrompt = headers && new Headers(headers);
+      }
     }
       setHeadersState(apiKeyPrompt);
       fetch(ApiUrlPrefectures, {

@@ -7,7 +7,7 @@
     "test": "jest",
     "start": "webpack serve --open",
     "deploy": "npm run build && gh-pages -d dist",
-    "typecheck" : "tsc --noEmit"
+    "typecheck": "tsc --noEmit"
   },
   "author": "",
   "license": "ISC",
