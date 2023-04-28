@@ -85,7 +85,6 @@ export const App: FC = (props: HighchartsReact.Props) => {
     
   }, []);
 
-  const chartComponentRef = useRef<HighchartsReact.RefObject>(null);
   /**
    * 選択されたデータの取得
    * @param {string}  prefCode  各都道府県の呼び出し番号
@@ -152,8 +151,12 @@ export const App: FC = (props: HighchartsReact.Props) => {
     let series = GraphData.series;
     if (series !== undefined) {
       series.splice(search, 1);
+      
       const graphDataBefore: Highcharts.Options = { series: series };
       setGraphData(graphDataBefore);
+
+      const NewSelectNumbers = SelectNumbers.splice(search, 1);
+      setSelectNumbers(NewSelectNumbers);
     }
   };
   /**
@@ -224,7 +227,7 @@ export const App: FC = (props: HighchartsReact.Props) => {
           );
         })
       ) : (
-        <p>No data available</p>
+        <p>APIkeyを挿入してください</p>
       )}
 
 
