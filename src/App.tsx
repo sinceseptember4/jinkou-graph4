@@ -156,11 +156,11 @@ export const App: FC = () => {
    * @param {HeadersInit | undefined} HeadersState HeadersStateを挿入　{"X-API-KEY": API keyが挿入}
    */
   const judge = (prefCode: string, HeadersState: HeadersInit | undefined) => {
-    let e = document.getElementById(prefCode) as HTMLInputElement;
+    let element = document.getElementById(prefCode) as HTMLInputElement;
     let num = Number(prefCode);
-    if (e === null) {
+    if (element === null) {
       console.error('都道府県のID取得に失敗しました');
-    } else if (e.checked) {
+    } else if (element.checked) {
       getData(num, HeadersState);
     } else {
       deleteData(num);
