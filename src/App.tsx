@@ -1,16 +1,13 @@
-
-import React, { useEffect, useRef, FC, CSSProperties } from 'react';
-import Highcharts from 'highcharts';
-import HighchartsReact from 'highcharts-react-official';
+import React, { FC, useState, useEffect, CSSProperties } from 'react';
 import { Title } from './components/title';
 import { Graph } from './components/graph';
-import { ApiUrl,ApiUrlPrefectures } from './Url';
+import { ApiUrl, ApiUrlPrefectures } from './Url';
 
-export const App: FC = (props: HighchartsReact.Props) => {
-  const [HeadersState, setHeadersState] = React.useState<HeadersInit | undefined>(undefined);
-  const [SelectNumbers, setSelectNumbers] = React.useState<number[]>([]);
-  const [TodoufukenData, setTodoufukenData] = React.useState<TodoufukenData[]>([]);
-  const [GraphData, setGraphData] = React.useState<Highcharts.Options>({});
+export const App: FC = () => {
+  const [HeadersState, setHeadersState] = useState<HeadersInit | undefined>(undefined);
+  const [SelectNumbers, setSelectNumbers] = useState<number[]>([]);
+  const [TodoufukenData, setTodoufukenData] = useState<TodoufukenData[]>([]);
+  const [GraphData, setGraphData] = useState<Highcharts.Options>({});
   interface TodoufukenData {
     prefCode: string;
     prefName: number;
@@ -29,9 +26,7 @@ export const App: FC = (props: HighchartsReact.Props) => {
     let apiKeyPrompt = HeadersState;
     if (apiKeyPrompt === undefined) {
       const prompt = window.prompt('apiKeyを入力してください', '');
-      /**
-       * @type {HeadersInit} {"X-API-KEY": API keyが挿入});
-       */
+
       if (prompt) {
         prompt.trim();
         const headers = new Headers({
@@ -40,49 +35,45 @@ export const App: FC = (props: HighchartsReact.Props) => {
         apiKeyPrompt = headers && new Headers(headers);
       }
     }
-      setHeadersState(apiKeyPrompt);
-      fetch(ApiUrlPrefectures, {
-        headers: apiKeyPrompt,
-      })
-        .then((response) => response.json())
-        .then((data) => setTodoufukenData(data.result))
-        .catch((error) =>
-          alert('エラーが発生しました。APIKEYが間違っている可能性があります。' + error)
-        );
+    setHeadersState(apiKeyPrompt);
+    fetch(ApiUrlPrefectures, {
+      headers: apiKeyPrompt,
+    })
+      .then((response) => response.json())
+      .then((data) => setTodoufukenData(data.result))
+      .catch((error) =>
+        alert('エラーが発生しました。APIKEYが間違っている可能性があります。' + error)
+      );
 
-      fetch(`${ApiUrl}/api/v1/population/composition/perYear?prefCode=0`, {
-        headers: apiKeyPrompt,
-      })
-        .then((response) => response.json())
-        .then((data) => {
-          /**
-           * @type {{ year: string, value: number }} year: 西暦。グラフに挿入する都合上、文字列　value: その年の人口数
-           */
-          const dates: ValuesData[] = data.result.data[0]['data'];
-          let arr: string[] = [];
-          dates.forEach((e) => {
-            arr = [...arr, e['year']];
-          });
-          //ここで初期データを挿入
-          setGraphData({
+    fetch(`${ApiUrl}/api/v1/population/composition/perYear?prefCode=0`, {
+      headers: apiKeyPrompt,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        /**
+         * @type {{ year: string, value: number }} year: 西暦。グラフに挿入する都合上、文字列　value: その年の人口数
+         */
+        const dates: ValuesData[] = data.result.data[0]['data'];
+        let arr: string[] = [];
+        dates.forEach((e) => {
+          arr = [...arr, e['year']];
+        });
+        //ここで初期データを挿入
+        setGraphData({
+          title: {
+            text: '',
+          },
+          xAxis: {
+            categories: arr,
+          },
+          yAxis: {
             title: {
-              text: '',
+              text: '人口',
             },
-            xAxis: {
-              categories: arr,
-            },
-            yAxis: {
-              title: {
-                text: '人口',
-              },
-            },
-            series: [],
-          });
-        })
-        .catch((error) =>
-          alert('エラーが発生しました。APIKEYが間違っている可能性があります。' + error)
-        );
-    
+          },
+          series: [],
+        });
+      })
   }, []);
 
   /**
@@ -151,7 +142,7 @@ export const App: FC = (props: HighchartsReact.Props) => {
     let series = GraphData.series;
     if (series !== undefined) {
       series.splice(search, 1);
-      
+
       const graphDataBefore: Highcharts.Options = { series: series };
       setGraphData(graphDataBefore);
 
@@ -175,11 +166,6 @@ export const App: FC = (props: HighchartsReact.Props) => {
       deleteData(num);
     }
   };
-  let dataOptions: Highcharts.DataOptions = {};
-  useEffect(() => {
-    const options: Highcharts.Options = GraphData;
-    dataOptions = options as Highcharts.DataOptions;
-  }, [GraphData]);
 
   const p: CSSProperties = {
     display: 'inline-block',
@@ -206,13 +192,9 @@ export const App: FC = (props: HighchartsReact.Props) => {
            */
           const prefName = data['prefName'];
           /**
-           * @type {number} 都道府県の呼出番号
-           */
-          const prefCode = data['prefCode'];
-          /**
            * @type {string} 都道府県の呼出番号のString型
            */
-          const prefCodeID: string = String(prefCode);
+          const prefCodeID = String(data['prefCode']);
           return (
             <div key={index} style={sell} className="list-row">
               <input
@@ -229,7 +211,6 @@ export const App: FC = (props: HighchartsReact.Props) => {
       ) : (
         <p>APIkeyを挿入してください</p>
       )}
-
 
       <Graph data={GraphData}></Graph>
     </>
